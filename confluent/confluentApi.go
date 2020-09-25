@@ -1,4 +1,4 @@
-package schema_registry_helper
+package confluent
 
 import (
 	"bytes"
@@ -57,7 +57,7 @@ type credentials struct {
 
 type schemaRequest struct {
 	Schema     string      `json:"schema"`
-	SchemaType string      `json:"schemaType"`
+	SchemaType string  `json:"schemaType"`
 	References []Reference `json:"references"`
 }
 
@@ -68,12 +68,21 @@ type schemaResponse struct {
 	ID      int    `json:"id"`
 }
 
+type SchemaType string
+
+func (s SchemaType) String() string {
+	return string(s)
+}
+
 const (
-	schemaByID       = "/schemas/ids/%d"
-	subjectCheck     = "/subjects/%s"
-	subjectVersions  = "/subjects/%s/versions"
-	subjectByVersion = "/subjects/%s/versions/%s"
-	contentType      = "application/vnd.schemaregistry.v1+json"
+	Protobuf         SchemaType = "PROTOBUF"
+	Avro             SchemaType = "AVRO"
+	Json             SchemaType = "JSON"
+	schemaByID                  = "/schemas/ids/%d"
+	subjectCheck                = "/subjects/%s"
+	subjectVersions             = "/subjects/%s/versions"
+	subjectByVersion            = "/subjects/%s/versions/%s"
+	contentType                 = "application/vnd.schemaregistry.v1+json"
 )
 
 var ErrNotFound = "404 Not Found: Schema not found"
@@ -169,11 +178,14 @@ func (client *SchemaRegistryClient) GetSchemaByVersion(subject string, version i
 // CheckSchema creates a new schema in Schema Registry and associates
 // with the subject provided. It returns the newly created schema with
 // all its associated information.
-func (client *SchemaRegistryClient) CheckSchema(subject string, schema string,
-	isKey bool, references ...Reference) (*schemaResponse, error) {
+func (client *SchemaRegistryClient) CheckSchema(subject, schema string,
+	schemaType SchemaType, isKey bool, references ...Reference) (*schemaResponse, error) {
 
 	concreteSubject := getConcreteSubject(subject, isKey)
-	payload := createPayload(schema, references)
+	payload, err := createPayload(schema, schemaType, references)
+	if err != nil {
+		return nil, err
+	}
 
 	resp, err := client.httpRequest("POST", fmt.Sprintf(subjectCheck, concreteSubject), payload)
 	if err != nil {
@@ -193,11 +205,14 @@ func (client *SchemaRegistryClient) CheckSchema(subject string, schema string,
 // CreateSchema creates a new schema in Schema Registry and associates
 // with the subject provided. It returns the newly created schema with
 // all its associated information.
-func (client *SchemaRegistryClient) CreateSchema(subject string, schema string,
-	isKey bool, references ...Reference) (*Schema, error) {
+func (client *SchemaRegistryClient) CreateSchema(subject, schema string,
+	schemaType SchemaType, isKey bool, references ...Reference) (*Schema, error) {
 
 	concreteSubject := getConcreteSubject(subject, isKey)
-	payload := createPayload(schema, references)
+	payload, err := createPayload(schema, schemaType, references)
+	if err != nil {
+		return nil, err
+	}
 
 	resp, err := client.httpRequest("POST", fmt.Sprintf(subjectVersions, concreteSubject), payload)
 	if err != nil {
@@ -370,19 +385,21 @@ func createError(resp *http.Response) error {
 	return fmt.Errorf("%s", resp.Status)
 }
 
-func createPayload(schema string, references []Reference) *bytes.Buffer {
+func createPayload(schema string, schemaType SchemaType, references []Reference) (*bytes.Buffer, error) {
 
-	compiledRegex := regexp.MustCompile(`\r?\n`)
-	schema = compiledRegex.ReplaceAllString(schema, " ")
+	if schemaType != Protobuf {
+		compiledRegex := regexp.MustCompile(`\r?\n`)
+		schema = compiledRegex.ReplaceAllString(schema, " ")
+	}
 
 	if references == nil {
 		references = make([]Reference, 0)
 	}
 
-	schemaReq := schemaRequest{Schema: schema, SchemaType: "JSON", References: references}
+	schemaReq := schemaRequest{Schema: schema, SchemaType: schemaType.String(), References: references}
 	schemaBytes, err := json.Marshal(schemaReq)
 	if err != nil {
-		fmt.Errorf("Error creating schema request: %v", err)
+		return bytes.NewBuffer(nil), err
 	}
-	return bytes.NewBuffer(schemaBytes)
+	return bytes.NewBuffer(schemaBytes), nil
 }
