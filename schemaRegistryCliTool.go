@@ -11,7 +11,7 @@ import (
 	"github.com/infobloxopen/schema-registry-helper/confluent"
 )
 
-func validateFlags(schemaRegistryUrlPtr, schemaTypePtr, schemaDirectoryPtr *string) (string, confluent.SchemaType, string){
+func validateFlags(schemaRegistryUrlPtr, schemaTypePtr, schemaDirectoryPtr *string) (string, confluent.SchemaType, string) {
 	if *schemaRegistryUrlPtr == "" || *schemaDirectoryPtr == "" {
 		flag.PrintDefaults()
 		os.Exit(1)
@@ -31,7 +31,7 @@ func validateFlags(schemaRegistryUrlPtr, schemaTypePtr, schemaDirectoryPtr *stri
 	return *schemaRegistryUrlPtr, schemaType, *schemaDirectoryPtr
 }
 
-func parseNamespaces(schemaDirectory string) ([]string){
+func parseNamespaces(schemaDirectory string) []string {
 	files, err := ioutil.ReadDir(schemaDirectory)
 	if err != nil {
 		fmt.Printf("Error reading input directory: %v", err)
@@ -54,7 +54,7 @@ func parseNamespaces(schemaDirectory string) ([]string){
 func main() {
 	schemaRegistryUrlPtr := flag.String("url", "", "URL of the Schema Registry (Required)")
 	schemaTypePtr := flag.String("type", "", "Schema Type {json|protobuf|avro} (Required)")
-	inputSchemaPtr := flag.String("inputschema", "", "Either the directory containing the schema files, or a specific schema file. " +
+	inputSchemaPtr := flag.String("inputschema", "", "Either the directory containing the schema files, or a specific schema file. "+
 		"If a directory is given, tool will automatically import all schema files within subdirectories.")
 	flag.Parse()
 
@@ -92,14 +92,14 @@ func main() {
 		namespace := filePathParts[len(filePathParts)-2]
 		fileName := filePathParts[len(filePathParts)-1]
 		filePrefix := strings.TrimSuffix(fileName, filepath.Ext(fileName))
-		exportSchema(inputSchema, namespace + "-" + filePrefix, schemaType, *schemaRegistryClient)
+		exportSchema(inputSchema, namespace+"-"+filePrefix, schemaType, *schemaRegistryClient)
 	}
 }
 
 func exportSchema(filePath, topic string, schemaType confluent.SchemaType, src confluent.SchemaRegistryClient) {
 	schemaBytes, _ := ioutil.ReadFile(filePath)
 	schema, err := src.CheckSchema(topic, string(schemaBytes), schemaType, false)
-	if err != nil && !strings.Contains(err.Error(),confluent.ErrNotFound) {
+	if err != nil && !strings.Contains(err.Error(), confluent.ErrNotFound) {
 		panic(fmt.Sprintf("  Error checking the schema %v: %s", filePath, err))
 	} else if err != nil {
 		schema, err := src.CreateSchema(topic, string(schemaBytes), schemaType, false)
@@ -111,9 +111,9 @@ func exportSchema(filePath, topic string, schemaType confluent.SchemaType, src c
 		fmt.Printf("  Schema already exists for topic %v - Schema version %v.\r\n", topic, schema.Version)
 	}
 }
+
 //TODO (not in this tool):
 // for each .proto file in input argument:
 // grab namespace from go_package using bash script; e.g. "pb"
 // create schema/pb directory
 // protoc --jsonschema_out=schema/pb blahblah
-
