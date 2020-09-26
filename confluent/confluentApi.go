@@ -57,7 +57,7 @@ type credentials struct {
 
 type schemaRequest struct {
 	Schema     string      `json:"schema"`
-	SchemaType string  `json:"schemaType"`
+	SchemaType string      `json:"schemaType"`
 	References []Reference `json:"references"`
 }
 
@@ -85,7 +85,7 @@ const (
 	contentType                 = "application/vnd.schemaregistry.v1+json"
 )
 
-var ErrNotFound = "404 Not Found: Schema not found"
+var ErrNotFound = "404 Not Found"
 
 // CreateSchemaRegistryClient creates a client that allows
 // interactions with Schema Registry over HTTP. Applications
