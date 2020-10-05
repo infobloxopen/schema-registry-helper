@@ -1,4 +1,4 @@
-package confluent
+package schema_registry_helper
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -255,6 +256,16 @@ func (client *SchemaRegistryClient) CreateSchema(subject, schema string,
 	return newSchema, nil
 }
 
+// SetCredentials allows users to set credentials to be
+// used with Schema Registry, for scenarios when Schema
+// Registry has authentication enabled.
+func (client *SchemaRegistryClient) SetCredentials(username string, password string) {
+	if len(username) > 0 && len(password) > 0 {
+		credentials := credentials{username, password}
+		client.credentials = &credentials
+	}
+}
+
 // SetTimeout allows the client to be reconfigured about
 // how much time internal HTTP requests will take until
 // they timeout. FYI, It defaults to five seconds.
@@ -402,4 +413,22 @@ func createPayload(schema string, schemaType SchemaType, references []Reference)
 		return bytes.NewBuffer(nil), err
 	}
 	return bytes.NewBuffer(schemaBytes), nil
+}
+
+// Export a schema to an existing schema_registry_helper schema registry
+// First, will check to see if the same schema already exists. If it does, it will return that schema's version
+// If it does not, a new schema will be created - and then that schema version number will be returned
+func ExportSchema(schemaBytes []byte, topic string, schemaType SchemaType, src SchemaRegistryClient) (int, error){
+	schema, err := src.CheckSchema(topic, string(schemaBytes), schemaType, false)
+	if err != nil && !strings.Contains(err.Error(), ErrNotFound) {
+		return -1, err
+	} else if err != nil { // A specific error returns from the API if the schema does not exist. In this case, create a new schema
+		schema, err := src.CreateSchema(topic, string(schemaBytes), schemaType, false)
+		if err != nil {
+			return -1, err
+		}
+		return schema.Version(), nil
+	} else { // Schema already exists - return that version
+		return schema.Version, nil
+	}
 }

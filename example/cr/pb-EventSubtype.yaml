@@ -1,0 +1,76 @@
+apiVersion: "eventing.infoblox.com/v1"
+kind: JsonSchema
+metadata:
+  name: pb-EventSubtype
+spec:
+  schema: {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "properties": {
+        "id": {
+            "$ref": "gorm.types.UUIDValue",
+            "additionalProperties": true,
+            "type": "object"
+        },
+        "name": {
+            "type": "string"
+        },
+        "product_name": {
+            "properties": {
+                "id": {
+                    "$ref": "gorm.types.UUIDValue",
+                    "additionalProperties": true,
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "allowed": {
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object"
+        },
+        "event_type": {
+            "properties": {
+                "id": {
+                    "$ref": "gorm.types.UUIDValue",
+                    "additionalProperties": true,
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object"
+        },
+        "allowed": {
+            "type": "boolean"
+        },
+        "description": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": true,
+    "type": "object",
+    "definitions": {
+        "gorm.types.UUIDValue": {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "properties": {
+                "value": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "id": "gorm.types.UUIDValue"
+        }
+    }
+}  registry: 

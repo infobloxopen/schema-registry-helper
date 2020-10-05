@@ -1,0 +1,140 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "properties": {
+        "id": {
+            "$ref": "gorm.types.UUIDValue",
+            "additionalProperties": true,
+            "type": "object"
+        },
+        "account_id": {
+            "type": "string"
+        },
+        "summarization_rule_id": {
+            "$ref": "gorm.types.UUIDValue",
+            "additionalProperties": true,
+            "type": "object"
+        },
+        "fingerprint": {
+            "type": "string"
+        },
+        "event_id": {
+            "type": "string"
+        },
+        "event_type": {
+            "enum": [
+                "ACCOUNT",
+                0,
+                "SYSTEM",
+                1,
+                "PRODUCT",
+                2,
+                "USER",
+                3
+            ],
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "integer"
+                }
+            ]
+        },
+        "event_subtype": {
+            "type": "string"
+        },
+        "event_application_id": {
+            "type": "string"
+        },
+        "event_location": {
+            "type": "string"
+        },
+        "event_severity": {
+            "enum": [
+                "low",
+                0,
+                "medium",
+                1,
+                "high",
+                2
+            ],
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "integer"
+                }
+            ]
+        },
+        "event_TTL": {
+            "properties": {
+                "seconds": {
+                    "oneOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "Signed seconds of the span of time. Must be from -315,576,000,000\n to +315,576,000,000 inclusive. Note: these bounds are computed from:\n 60 sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years"
+                },
+                "nanos": {
+                    "type": "integer",
+                    "description": "Signed fractions of a second at nanosecond resolution of the span\n of time. Durations less than one second are represented with a 0\n `seconds` field and a positive or negative `nanos` field. For durations\n of one second or more, a non-zero value for the `nanos` field must be\n of the same sign as the `seconds` field. Must be from -999,999,999\n to +999,999,999 inclusive."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object"
+        },
+        "event_metadata": {
+            "additionalProperties": {
+                "type": "string"
+            },
+            "type": "object"
+        },
+        "event_occurredTime": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "event_generatedTime": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "event_status": {
+            "enum": [
+                "RAISED",
+                0,
+                "CLEARED",
+                1
+            ],
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "integer"
+                }
+            ]
+        },
+        "product_name": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": true,
+    "type": "object",
+    "definitions": {
+        "gorm.types.UUIDValue": {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "properties": {
+                "value": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "id": "gorm.types.UUIDValue"
+        }
+    }
+}
