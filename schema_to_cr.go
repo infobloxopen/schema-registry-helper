@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -42,31 +43,9 @@ func main() {
 		fmt.Printf("Input schema and output path must both be directories.\r\n")
 		os.Exit(1)
 	}
-	namespaces := parseNamespaces(inputSchema)
-	for _, n := range namespaces {
-		namespaceDirectory := inputSchema + "/" + n
-		fmt.Printf("Creating CRs for schemas in directory %v...\r\n", namespaceDirectory)
-		files, err := ioutil.ReadDir(namespaceDirectory)
-		if err != nil {
-			fmt.Printf("Error reading input directory %v, skipping...\r\n", namespaceDirectory)
-			break
-		}
-		for _, f := range files {
-			filePath := namespaceDirectory + "/" + f.Name()
-			topic := n + "-" + strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
-			fmt.Printf("Creating custom resource file for topic %v...\r\n", topic)
-			createCR(filePath, outputPath, topic)
-		}
-	}
-	f, err := os.Create(outputPath + "/crd.yaml")
-	if err != nil {
-		fmt.Printf("Error creating crd.yaml file\r\n")
-		os.Exit(1)
-	}
-	_, err = f.WriteString(crd)
-	if err != nil {
-		fmt.Printf("Error writing to crd.yaml file\r\n")
-	}
+
+	crOutput := createCrOutput(inputSchema)
+	writeFiles(crOutput, outputPath)
 }
 
 func parseNamespaces(schemaDirectory string) []string {
@@ -89,15 +68,34 @@ func parseNamespaces(schemaDirectory string) []string {
 	return namespaces
 }
 
-func createCR(inputFilePath, outputDirectory, topic string) {
+func createCrOutput(inputSchema string) string {
+	crOutput := ""
+	namespaces := parseNamespaces(inputSchema)
+	for _, n := range namespaces {
+		namespaceDirectory := inputSchema + "/" + n
+		fmt.Printf("Creating CRs for schemas in directory %v...\r\n", namespaceDirectory)
+		files, err := ioutil.ReadDir(namespaceDirectory)
+		if err != nil {
+			fmt.Printf("Error reading input directory %v, skipping...\r\n", namespaceDirectory)
+			break
+		}
+		for _, f := range files {
+			filePath := namespaceDirectory + "/" + f.Name()
+			topic := n + "-" + strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
+			if crOutput != "" {
+				crOutput = crOutput + "---\n"
+			}
+			fmt.Printf("Creating custom resource for topic %v...\r\n", topic)
+			crOutput = crOutput + createCR(filePath, topic)
+		}
+	}
+	return crOutput
+}
+
+func createCR(inputFilePath, topic string) string {
 	inputString, err := ioutil.ReadFile(inputFilePath)
 	if err != nil {
 		fmt.Printf("Error reading input file %v\r\n", inputFilePath)
-		os.Exit(1)
-	}
-	f, err := os.Create(outputDirectory + "/" + topic + ".yaml")
-	if err != nil {
-		fmt.Printf("Error creating output file for schema %v\r\n", topic)
 		os.Exit(1)
 	}
 	t, err := template.New("cr").Parse(cr_skeleton)
@@ -107,5 +105,31 @@ func createCR(inputFilePath, outputDirectory, topic string) {
 	var cr CR
 	cr.Name = topic
 	cr.Schema = string(inputString)
-	err = t.Execute(f, cr)
+	var tpl bytes.Buffer
+	if err := t.Execute(&tpl, cr); err != nil {
+		fmt.Printf("Error creating cr %v\r\n", topic)
+		os.Exit(1)
+	}
+	return tpl.String()
+}
+
+func writeFiles(crOutput, outputPath string) {
+	fo1, err := os.Create(outputPath + "/jsonschema-cr.yaml")
+	if err != nil {
+		fmt.Printf("Error creating jsonschema-cr.yaml file\r\n")
+		os.Exit(1)
+	}
+	_, err = fo1.WriteString(crOutput)
+	if err != nil {
+		fmt.Printf("Error writing to crd.yaml file\r\n")
+	}
+	fo2, err := os.Create(outputPath + "/jsonschema-crd.yaml")
+	if err != nil {
+		fmt.Printf("Error creating crd.yaml file\r\n")
+		os.Exit(1)
+	}
+	_, err = fo2.WriteString(crd)
+	if err != nil {
+		fmt.Printf("Error writing to crd.yaml file\r\n")
+	}
 }
