@@ -13,7 +13,19 @@ Simple library for interacting with the confluent schema registry API. Heavily b
     - If `--inputschema` is a directory which contains subdirectories, **all** files in those subdirectories will attempt to be converted.
 - -outputpath
   - This is the path to the directory which will contain the output custom resource files, as well as the custom resource definition file.
-    
+  
+## Integrating command line tool into a Makefile
+The command line tool can be integrated into a Makefile by adding lines such as this. This will automatically translate existing protobuf schemas to json and then create custom resource files (and a custom resource definition file) from those json schemas (Make sure that `CR_DIRECTORY` and `SCHEMA_DIRECTORY` are defined somewhere in your Makefile as well)
+
+```.PHONY schema-clean: schema
+schema:
+  @GOSUMDB=off go get github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema
+  @GOSUMDB=off go get github.com/infobloxopen/schema-registry-helper
+  @mkdir -p $(CR_DIRECTORY) $(SCHEMA_DIRECTORY)
+  @protoc --jsonschema_out=prefix_schema_files_with_package:$(SCHEMA_DIRECTORY) -I=vendor -I=pkg/pb pkg/pb/*.proto
+  @schema-registry-helper -inputschema=schema -outputpath=$(CR_DIRECTORY)
+```
+
 ## GRPC functions - Exporting to Schema Registry (package schema_registry_helper)
 ExportSchema() is a function which takes an input schema and adds it to a schema registry. 
 First, the function will check to see if that exact schema is already registered. 
