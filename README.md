@@ -26,6 +26,8 @@ schema:
   @schema-registry-helper -inputschema=schema -outputpath=$(CR_DIRECTORY)
 ```
 
+The end result of this will create jsonschema-cr.yaml and jsonschema-crd.yaml files in the directory provided. These files will need to be applied as part of the deployment to fully interface with the schema registry toolkit.
+
 ## GRPC functions - Exporting to Schema Registry (package schema_registry_helper)
 ExportSchema() is a function which takes an input schema and adds it to a schema registry. 
 First, the function will check to see if that exact schema is already registered. 
