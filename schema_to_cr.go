@@ -12,22 +12,27 @@ import (
 )
 
 type CR struct {
-	Name string
+	Name   string
 	Schema string
 }
 
+type CRD struct {
+	Group string
+}
+
 const cr_skeleton = "apiVersion: \"eventing.infoblox.com/v1\"\nkind: JsonSchema\nmetadata:\n  name: {{ .Name}}\nspec:\n  schema: {{ .Schema}}  registry: \n"
-const crd = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.eventing.infoblox.com\nspec:\n  " +
-	"group: eventing.infoblox.com\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
+const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.{{ .Group}}\nspec:\n  " +
+	"group: {{ .Group}}\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
 	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                registry:\n                  " +
 	"type: string\n                schema:\n                  type: object\n  scope: Namespaced\n  names:\n    plural: jsonschemas\n    singular: jsonschema\n    " +
 	"kind: JsonSchema\n    shortNames:\n      - js"
 
 func main() {
-	inputSchemaPtr := flag.String("inputschema", "", "The directory containing the schema files. tool will automatically import all schema files within subdirectories.")
+	inputSchemaPtr := flag.String("inputschema", "", "The directory containing the schema files. tool will automatically import all schema files within subdirectories (required).")
 	outputPathPtr := flag.String("outputpath", "", "The path to the directory where the result CRs will go (required).")
+	groupPtr := flag.String("group", "", "The string of the group for the created crd file (example: notifications.infoblox.com) (required).")
 	flag.Parse()
-	if *inputSchemaPtr == "" || *outputPathPtr == "" {
+	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -45,7 +50,7 @@ func main() {
 	}
 
 	crOutput := createCrOutput(inputSchema)
-	writeFiles(crOutput, outputPath)
+	writeFiles(crOutput, outputPath, *groupPtr)
 }
 
 func parseNamespaces(schemaDirectory string) []string {
@@ -113,7 +118,7 @@ func createCR(inputFilePath, topic string) string {
 	return tpl.String()
 }
 
-func writeFiles(crOutput, outputPath string) {
+func writeFiles(crOutput, outputPath, group string) {
 	fo1, err := os.Create(outputPath + "/jsonschema-cr.yaml")
 	if err != nil {
 		fmt.Printf("Error creating jsonschema-cr.yaml file\r\n")
@@ -128,7 +133,18 @@ func writeFiles(crOutput, outputPath string) {
 		fmt.Printf("Error creating crd.yaml file\r\n")
 		os.Exit(1)
 	}
-	_, err = fo2.WriteString(crd)
+	t, err := template.New("crd").Parse(crd_skeleton)
+	if err != nil {
+		fmt.Printf("Error processing template for crd\r\n")
+	}
+	var crd CRD
+	crd.Group = group
+	var tpl bytes.Buffer
+	if err := t.Execute(&tpl, crd); err != nil {
+		fmt.Printf("Error creating crd \r\n")
+		os.Exit(1)
+	}
+	_, err = fo2.WriteString(tpl.String())
 	if err != nil {
 		fmt.Printf("Error writing to crd.yaml file\r\n")
 	}
