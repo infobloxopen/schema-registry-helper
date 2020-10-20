@@ -13,7 +13,9 @@ Simple library for interacting with the confluent schema registry API. Heavily b
     - If `--inputschema` is a directory which contains subdirectories, **all** files in those subdirectories will attempt to be converted.
 - -outputpath
   - This is the path to the directory which will contain the output custom resource files, as well as the custom resource definition file.
-  
+- -group
+  - This is the group that is used in the CRD file (example: notifications.infoblox.com)
+    
 ## Integrating command line tool into a Makefile
 The command line tool can be integrated into a Makefile by adding lines such as this. This will automatically translate existing protobuf schemas to json and then create custom resource files (and a custom resource definition file) from those json schemas (Make sure that `CR_DIRECTORY` and `SCHEMA_DIRECTORY` are defined somewhere in your Makefile as well)
 
@@ -23,7 +25,7 @@ schema:
   @GOSUMDB=off go get github.com/infobloxopen/schema-registry-helper
   @mkdir -p $(CR_DIRECTORY) $(SCHEMA_DIRECTORY)
   @protoc --jsonschema_out=prefix_schema_files_with_package:$(SCHEMA_DIRECTORY) -I=vendor -I=pkg/pb pkg/pb/*.proto
-  @schema-registry-helper -inputschema=schema -outputpath=$(CR_DIRECTORY)
+  @schema-registry-helper -inputschema=$(SCHEMA_DIRECTORY) -outputpath=$(CR_DIRECTORY) -group=$(GROUP)
 ```
 
 The end result of this will create jsonschema-cr.yaml and jsonschema-crd.yaml files in the directory provided. These files will need to be applied as part of the deployment to fully interface with the schema registry toolkit.
