@@ -1,8 +1,9 @@
-apiVersion: "eventing.infoblox.com/v1"
+apiVersion: "tagging-v2.infoblox.com/v1"
 kind: JsonSchema
 metadata:
   name: pb-Event
 spec:
+  name: pb-Event
   schema: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
@@ -103,13 +104,15 @@ spec:
     },
     "additionalProperties": true,
     "type": "object"
-}  registry: 
+}
+  registry: 
 ---
-apiVersion: "eventing.infoblox.com/v1"
+apiVersion: "tagging-v2.infoblox.com/v1"
 kind: JsonSchema
 metadata:
   name: pb-EventSubtype
 spec:
+  name: pb-EventSubtype
   schema: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
@@ -180,13 +183,15 @@ spec:
             "id": "gorm.types.UUIDValue"
         }
     }
-}  registry: 
+}
+  registry: 
 ---
-apiVersion: "eventing.infoblox.com/v1"
+apiVersion: "tagging-v2.infoblox.com/v1"
 kind: JsonSchema
 metadata:
   name: pb-EventType
 spec:
+  name: pb-EventType
   schema: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
@@ -208,13 +213,15 @@ spec:
     },
     "additionalProperties": true,
     "type": "object"
-}  registry: 
+}
+  registry: 
 ---
-apiVersion: "eventing.infoblox.com/v1"
+apiVersion: "tagging-v2.infoblox.com/v1"
 kind: JsonSchema
 metadata:
   name: pb-ProductName
 spec:
+  name: pb-ProductName
   schema: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
@@ -239,13 +246,15 @@ spec:
     },
     "additionalProperties": true,
     "type": "object"
-}  registry: 
+}
+  registry: 
 ---
-apiVersion: "eventing.infoblox.com/v1"
+apiVersion: "tagging-v2.infoblox.com/v1"
 kind: JsonSchema
 metadata:
   name: pb-Summary
 spec:
+  name: pb-Summary
   schema: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
@@ -385,4 +394,5 @@ spec:
             "id": "gorm.types.UUIDValue"
         }
     }
-}  registry: 
+}
+  registry: 
