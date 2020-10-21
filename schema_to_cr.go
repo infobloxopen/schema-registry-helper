@@ -14,13 +14,14 @@ import (
 type CR struct {
 	Name   string
 	Schema string
+	Group  string
 }
 
 type CRD struct {
 	Group string
 }
 
-const cr_skeleton = "apiVersion: \"eventing.infoblox.com/v1\"\nkind: JsonSchema\nmetadata:\n  name: {{ .Name}}\nspec:\n  schema: {{ .Schema}}  registry: \n"
+const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: JsonSchema\nmetadata:\n  name: {{ .Name}}\nspec:\n  schema: {{ .Schema}}  registry: \n"
 const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.{{ .Group}}\nspec:\n  " +
 	"group: {{ .Group}}\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
 	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                registry:\n                  " +
@@ -38,6 +39,7 @@ func main() {
 	}
 	inputSchema := *inputSchemaPtr
 	outputPath := *outputPathPtr
+	group := *groupPtr
 	fi1, err := os.Stat(inputSchema)
 	if err != nil {
 		fmt.Printf("Error reading the input schema: %v\r\n", err)
@@ -49,8 +51,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	crOutput := createCrOutput(inputSchema)
-	writeFiles(crOutput, outputPath, *groupPtr)
+	crOutput := createCrOutput(inputSchema, group)
+	writeFiles(crOutput, outputPath, group)
 }
 
 func parseNamespaces(schemaDirectory string) []string {
@@ -73,8 +75,8 @@ func parseNamespaces(schemaDirectory string) []string {
 	return namespaces
 }
 
-func createCrOutput(inputSchema string) string {
-	crOutput := ""
+func createCrOutput(inputSchema, group string) map[string]string {
+	crOutput := make(map[string]string)
 	namespaces := parseNamespaces(inputSchema)
 	for _, n := range namespaces {
 		namespaceDirectory := inputSchema + "/" + n
@@ -84,20 +86,22 @@ func createCrOutput(inputSchema string) string {
 			fmt.Printf("Error reading input directory %v, skipping...\r\n", namespaceDirectory)
 			break
 		}
+		namespaceOutput := ""
 		for _, f := range files {
 			filePath := namespaceDirectory + "/" + f.Name()
 			topic := n + "-" + strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
-			if crOutput != "" {
-				crOutput = crOutput + "---\n"
+			if namespaceOutput != "" {
+				namespaceOutput = namespaceOutput + "---\n"
 			}
 			fmt.Printf("Creating custom resource for topic %v...\r\n", topic)
-			crOutput = crOutput + createCR(filePath, topic)
+			namespaceOutput = namespaceOutput + createCR(filePath, topic, group)
 		}
+		crOutput[n] = namespaceOutput
 	}
 	return crOutput
 }
 
-func createCR(inputFilePath, topic string) string {
+func createCR(inputFilePath, topic, group string) string {
 	inputString, err := ioutil.ReadFile(inputFilePath)
 	if err != nil {
 		fmt.Printf("Error reading input file %v\r\n", inputFilePath)
@@ -110,6 +114,7 @@ func createCR(inputFilePath, topic string) string {
 	var cr CR
 	cr.Name = topic
 	cr.Schema = string(inputString)
+	cr.Group = group
 	var tpl bytes.Buffer
 	if err := t.Execute(&tpl, cr); err != nil {
 		fmt.Printf("Error creating cr %v\r\n", topic)
@@ -118,15 +123,17 @@ func createCR(inputFilePath, topic string) string {
 	return tpl.String()
 }
 
-func writeFiles(crOutput, outputPath, group string) {
-	fo1, err := os.Create(outputPath + "/jsonschema-cr.yaml")
-	if err != nil {
-		fmt.Printf("Error creating jsonschema-cr.yaml file\r\n")
-		os.Exit(1)
-	}
-	_, err = fo1.WriteString(crOutput)
-	if err != nil {
-		fmt.Printf("Error writing to crd.yaml file\r\n")
+func writeFiles(crOutput map[string]string, outputPath, group string) {
+	for namespace, output := range crOutput {
+		fo1, err := os.Create(outputPath + "/jsonschema-" + namespace + "-cr.yaml")
+		if err != nil {
+			fmt.Printf("Error creating jsonschema-%v-cr.yaml file\r\n", namespace)
+			os.Exit(1)
+		}
+		_, err = fo1.WriteString(output)
+		if err != nil {
+			fmt.Printf("Error writing to jsonschema-%v-cr.yaml file\r\n", namespace)
+		}
 	}
 	fo2, err := os.Create(outputPath + "/jsonschema-crd.yaml")
 	if err != nil {
