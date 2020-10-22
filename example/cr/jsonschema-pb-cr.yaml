@@ -1,9 +1,9 @@
 apiVersion: "tagging-v2.infoblox.com/v1"
 kind: JsonSchema
 metadata:
-  name: pb-Event
+  name: pb-event
 spec:
-  name: pb-Event
+  name: pb-event
   schema: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
@@ -105,14 +105,14 @@ spec:
     "additionalProperties": true,
     "type": "object"
 }
-  registry: 
+  registry:
 ---
 apiVersion: "tagging-v2.infoblox.com/v1"
 kind: JsonSchema
 metadata:
-  name: pb-EventSubtype
+  name: pb-eventsubtype
 spec:
-  name: pb-EventSubtype
+  name: pb-eventsubtype
   schema: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
@@ -184,14 +184,14 @@ spec:
         }
     }
 }
-  registry: 
+  registry:
 ---
 apiVersion: "tagging-v2.infoblox.com/v1"
 kind: JsonSchema
 metadata:
-  name: pb-EventType
+  name: pb-eventtype
 spec:
-  name: pb-EventType
+  name: pb-eventtype
   schema: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
@@ -214,14 +214,14 @@ spec:
     "additionalProperties": true,
     "type": "object"
 }
-  registry: 
+  registry:
 ---
 apiVersion: "tagging-v2.infoblox.com/v1"
 kind: JsonSchema
 metadata:
-  name: pb-ProductName
+  name: pb-productname
 spec:
-  name: pb-ProductName
+  name: pb-productname
   schema: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
@@ -247,14 +247,14 @@ spec:
     "additionalProperties": true,
     "type": "object"
 }
-  registry: 
+  registry:
 ---
 apiVersion: "tagging-v2.infoblox.com/v1"
 kind: JsonSchema
 metadata:
-  name: pb-Summary
+  name: pb-summary
 spec:
-  name: pb-Summary
+  name: pb-summary
   schema: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
@@ -395,4 +395,4 @@ spec:
         }
     }
 }
-  registry: 
+  registry:
