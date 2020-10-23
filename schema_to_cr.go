@@ -21,11 +21,11 @@ type CRD struct {
 	Group string
 }
 
-const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: JsonSchema\nmetadata:\n  name: {{ .Name}}\nspec:\n  name: {{ .Name}}\n  schema: {{ .Schema}}\n  registry: \"\"\n"
+const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: JsonSchema\nmetadata:\n  name: {{ .Name}}\nspec:\n  name: {{ .Name}}\n  schema: >\n    {{ .Schema}}\n  registry: \"\"\n"
 const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.{{ .Group}}\nspec:\n  " +
 	"group: {{ .Group}}\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
 	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                registry:\n                  " +
-	"type: string\n                schema:\n                  type: object\n                name:\n                  type: string\n  scope: Namespaced\n  names:\n    plural: jsonschemas\n    singular: jsonschema\n    " +
+	"type: string\n                schema:\n                  type: string\n                name:\n                  type: string\n  scope: Namespaced\n  names:\n    plural: jsonschemas\n    singular: jsonschema\n    " +
 	"kind: JsonSchema\n    shortNames:\n      - js\n"
 
 func main() {
@@ -113,7 +113,7 @@ func createCR(inputFilePath, topic, group string) string {
 	}
 	var cr CR
 	cr.Name = strings.ToLower(topic)
-	cr.Schema = string(inputString)
+	cr.Schema = string(strings.ReplaceAll(string(inputString), "\n", ""))
 	cr.Group = group
 	var tpl bytes.Buffer
 	if err := t.Execute(&tpl, cr); err != nil {
