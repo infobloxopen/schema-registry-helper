@@ -18,7 +18,7 @@ spec:
                 registry:
                   type: string
                 schema:
-                  type: object
+                  type: string
                 name:
                   type: string
   scope: Namespaced
