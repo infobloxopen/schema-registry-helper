@@ -21,19 +21,21 @@ type CRD struct {
 	Group string
 }
 
-const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: JsonSchema\nmetadata:\n  name: {{ .Name}}\nspec:\n  name: {{ .Name}}\n  schema: >\n    {{ .Schema}}\n  registry: \"\"\n"
+const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: JsonSchema\nmetadata:\n  name: {{ .Name}}\nspec:\n  name: {{ .Name}}\n  schema: >\n    {{ .Schema}}\n"
 const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.{{ .Group}}\nspec:\n  " +
 	"group: {{ .Group}}\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
-	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                registry:\n                  " +
-	"type: string\n                schema:\n                  type: string\n                name:\n                  type: string\n  scope: Namespaced\n  names:\n    plural: jsonschemas\n    singular: jsonschema\n    " +
+	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                " +
+	"schema:\n                  type: string\n                name:\n                  type: string\n  scope: Namespaced\n  names:\n    plural: jsonschemas\n    singular: jsonschema\n    " +
 	"kind: JsonSchema\n    shortNames:\n      - js\n"
 
 func main() {
 	inputSchemaPtr := flag.String("inputschema", "", "The directory containing the schema files. tool will automatically import all schema files within subdirectories (required).")
 	outputPathPtr := flag.String("outputpath", "", "The path to the directory where the result CRs will go (required).")
 	groupPtr := flag.String("group", "", "The string of the group for the created crd file (example: notifications.infoblox.com) (required).")
+	namespacePtr := flag.String("namespace", "", "The namespace that the crd file exists in (example: notifications) (required)")
+
 	flag.Parse()
-	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" {
+	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" || *namespacePtr == "" {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -51,7 +53,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	crOutput := createCrOutput(inputSchema, group)
+	crOutput := createCrOutput(inputSchema, group, *namespacePtr)
 	writeFiles(crOutput, outputPath, group)
 }
 
@@ -75,7 +77,7 @@ func parseNamespaces(schemaDirectory string) []string {
 	return namespaces
 }
 
-func createCrOutput(inputSchema, group string) map[string]string {
+func createCrOutput(inputSchema, group, namespace string) map[string]string {
 	crOutput := make(map[string]string)
 	namespaces := parseNamespaces(inputSchema)
 	for _, n := range namespaces {
@@ -89,7 +91,7 @@ func createCrOutput(inputSchema, group string) map[string]string {
 		namespaceOutput := ""
 		for _, f := range files {
 			filePath := namespaceDirectory + "/" + f.Name()
-			topic := n + "-" + strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
+			topic := namespace + "." + n + "." + strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
 			if namespaceOutput != "" {
 				namespaceOutput = namespaceOutput + "---\n"
 			}
