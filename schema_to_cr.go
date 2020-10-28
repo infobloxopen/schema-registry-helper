@@ -32,10 +32,9 @@ func main() {
 	inputSchemaPtr := flag.String("inputschema", "", "The directory containing the schema files. tool will automatically import all schema files within subdirectories (required).")
 	outputPathPtr := flag.String("outputpath", "", "The path to the directory where the result CRs will go (required).")
 	groupPtr := flag.String("group", "", "The string of the group for the created crd file (example: notifications.infoblox.com) (required).")
-	namespacePtr := flag.String("namespace", "", "The namespace that the crd file exists in (example: notifications) (required)")
 
 	flag.Parse()
-	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" || *namespacePtr == "" {
+	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -53,7 +52,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	crOutput := createCrOutput(inputSchema, group, *namespacePtr)
+	crOutput := createCrOutput(inputSchema, group)
 	writeFiles(crOutput, outputPath, group)
 }
 
@@ -77,7 +76,7 @@ func parseNamespaces(schemaDirectory string) []string {
 	return namespaces
 }
 
-func createCrOutput(inputSchema, group, namespace string) map[string]string {
+func createCrOutput(inputSchema, group string) map[string]string {
 	crOutput := make(map[string]string)
 	namespaces := parseNamespaces(inputSchema)
 	for _, n := range namespaces {
@@ -91,19 +90,19 @@ func createCrOutput(inputSchema, group, namespace string) map[string]string {
 		namespaceOutput := ""
 		for _, f := range files {
 			filePath := namespaceDirectory + "/" + f.Name()
-			topic := namespace + "." + n + "." + strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
+			schemaName := "{{ .Release.Namespace }}." + n + "." + strings.ToLower(strings.TrimSuffix(f.Name(), filepath.Ext(f.Name())))
 			if namespaceOutput != "" {
 				namespaceOutput = namespaceOutput + "---\n"
 			}
-			fmt.Printf("Creating custom resource for topic %v...\r\n", topic)
-			namespaceOutput = namespaceOutput + createCR(filePath, topic, group)
+			fmt.Printf("Creating custom resource for topic %v...\r\n", schemaName)
+			namespaceOutput = namespaceOutput + createCR(filePath, schemaName, group)
 		}
 		crOutput[n] = namespaceOutput
 	}
 	return crOutput
 }
 
-func createCR(inputFilePath, topic, group string) string {
+func createCR(inputFilePath, schemaName, group string) string {
 	inputString, err := ioutil.ReadFile(inputFilePath)
 	if err != nil {
 		fmt.Printf("Error reading input file %v\r\n", inputFilePath)
@@ -111,15 +110,15 @@ func createCR(inputFilePath, topic, group string) string {
 	}
 	t, err := template.New("cr").Parse(cr_skeleton)
 	if err != nil {
-		fmt.Printf("Error processing template for schema %v", topic)
+		fmt.Printf("Error processing template for schema %v", schemaName)
 	}
 	var cr CR
-	cr.Name = strings.ToLower(topic)
+	cr.Name = schemaName
 	cr.Schema = string(strings.ReplaceAll(string(inputString), "\n", ""))
 	cr.Group = group
 	var tpl bytes.Buffer
 	if err := t.Execute(&tpl, cr); err != nil {
-		fmt.Printf("Error creating cr %v\r\n", topic)
+		fmt.Printf("Error creating cr %v\r\n", schemaName)
 		os.Exit(1)
 	}
 	return tpl.String()
