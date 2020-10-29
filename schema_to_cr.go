@@ -31,7 +31,8 @@ const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceD
 func main() {
 	inputSchemaPtr := flag.String("inputschema", "", "The directory containing the schema files. tool will automatically import all schema files within subdirectories (required).")
 	outputPathPtr := flag.String("outputpath", "", "The path to the directory where the result CRs will go (required).")
-	groupPtr := flag.String("group", "", "The string of the group for the created crd file (example: notifications.infoblox.com) (required).")
+	groupPtr := flag.String("group", "", "The string of the group for the created CR and CRD files (example: schemaregistry.infoblox.com) (required).")
+	makeCrdPtr := flag.Bool("makecrd", false, "Boolean option to choose whether to generate a new CRD file (optional; default false)")
 
 	flag.Parse()
 	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" {
@@ -53,7 +54,7 @@ func main() {
 	}
 
 	crOutput := createCrOutput(inputSchema, group)
-	writeFiles(crOutput, outputPath, group)
+	writeFiles(crOutput, outputPath, group, *makeCrdPtr)
 }
 
 func parseNamespaces(schemaDirectory string) []string {
@@ -124,7 +125,7 @@ func createCR(inputFilePath, schemaName, group string) string {
 	return tpl.String()
 }
 
-func writeFiles(crOutput map[string]string, outputPath, group string) {
+func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd bool) {
 	for namespace, output := range crOutput {
 		fo1, err := os.Create(outputPath + "/jsonschema-" + namespace + "-cr.yaml")
 		if err != nil {
@@ -135,6 +136,9 @@ func writeFiles(crOutput map[string]string, outputPath, group string) {
 		if err != nil {
 			fmt.Printf("Error writing to jsonschema-%v-cr.yaml file\r\n", namespace)
 		}
+	}
+	if !makeCrd {
+		return
 	}
 	fo2, err := os.Create(outputPath + "/jsonschema-crd.yaml")
 	if err != nil {
