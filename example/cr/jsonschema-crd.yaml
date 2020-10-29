@@ -23,6 +23,6 @@ spec:
   names:
     plural: jsonschemas
     singular: jsonschema
-    kind: JsonSchema
+    kind: Jsonschema
     shortNames:
       - js
