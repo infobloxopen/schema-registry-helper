@@ -33,6 +33,7 @@ func main() {
 	outputPathPtr := flag.String("outputpath", "", "The path to the directory where the result CRs will go (required).")
 	groupPtr := flag.String("group", "", "The string of the group for the created CR and CRD files (example: schemaregistry.infoblox.com) (required).")
 	makeCrdPtr := flag.Bool("makecrd", false, "Boolean option to choose whether to generate a new CRD file (optional; default false)")
+	omitPtr := flag.String("omit", "", "Option to omit creating CR entries for types starting with the given string(s). Multiple strings should be comma-separated - e.g. \"read,list\" (optional).")
 
 	flag.Parse()
 	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" {
@@ -42,6 +43,8 @@ func main() {
 	inputSchema := *inputSchemaPtr
 	outputPath := *outputPathPtr
 	group := *groupPtr
+	omit := strings.Split(*omitPtr, ",")
+
 	fi1, err := os.Stat(inputSchema)
 	if err != nil {
 		fmt.Printf("Error reading the input schema: %v\r\n", err)
@@ -53,7 +56,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	crOutput := createCrOutput(inputSchema, group)
+	crOutput := createCrOutput(inputSchema, group, omit)
 	writeFiles(crOutput, outputPath, group, *makeCrdPtr)
 }
 
@@ -77,7 +80,7 @@ func parseNamespaces(schemaDirectory string) []string {
 	return namespaces
 }
 
-func createCrOutput(inputSchema, group string) map[string]string {
+func createCrOutput(inputSchema, group string, omit []string) map[string]string {
 	crOutput := make(map[string]string)
 	namespaces := parseNamespaces(inputSchema)
 	for _, n := range namespaces {
@@ -90,8 +93,18 @@ func createCrOutput(inputSchema, group string) map[string]string {
 		}
 		namespaceOutput := ""
 		for _, f := range files {
+			skip := false
 			filePath := namespaceDirectory + "/" + f.Name()
-			schemaName := "{{ .Release.Namespace }}." + n + "." + strings.ToLower(strings.TrimSuffix(f.Name(), filepath.Ext(f.Name())))
+			schemaType := strings.ToLower(strings.TrimSuffix(f.Name(), filepath.Ext(f.Name())))
+			for _, o := range omit {
+				if strings.HasPrefix(schemaType, strings.ToLower(o)) {
+					skip = true
+				}
+			}
+			if skip {
+				continue
+			}
+			schemaName := "{{ .Release.Namespace }}." + n + "." + schemaType
 			if namespaceOutput != "" {
 				namespaceOutput = namespaceOutput + "---\n"
 			}
