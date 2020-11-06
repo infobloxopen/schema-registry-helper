@@ -34,6 +34,7 @@ func main() {
 	groupPtr := flag.String("group", "", "The string of the group for the created CR and CRD files (example: schemaregistry.infoblox.com) (required).")
 	makeCrdPtr := flag.Bool("makecrd", false, "Boolean option to choose whether to generate a new CRD file (optional; default false)")
 	omitPtr := flag.String("omit", "", "Option to omit creating CR entries for types starting with the given string(s). Multiple strings should be comma-separated - e.g. \"read,list\" (optional).")
+	crNamespacePtr := flag.String("crnamespace", "", "Option to use a different namespace for the CRs if {{ .Release.Namespace }} is not desired")
 
 	flag.Parse()
 	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" {
@@ -56,7 +57,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	crOutput := createCrOutput(inputSchema, group, omit)
+	crOutput := createCrOutput(inputSchema, group, *crNamespacePtr, omit)
 	writeFiles(crOutput, outputPath, group, *makeCrdPtr)
 }
 
@@ -80,7 +81,7 @@ func parseNamespaces(schemaDirectory string) []string {
 	return namespaces
 }
 
-func createCrOutput(inputSchema, group string, omit []string) map[string]string {
+func createCrOutput(inputSchema, group, crNamespace string, omit []string) map[string]string {
 	crOutput := make(map[string]string)
 	namespaces := parseNamespaces(inputSchema)
 	for _, n := range namespaces {
@@ -97,6 +98,9 @@ func createCrOutput(inputSchema, group string, omit []string) map[string]string 
 			filePath := namespaceDirectory + "/" + f.Name()
 			schemaType := strings.ToLower(strings.TrimSuffix(f.Name(), filepath.Ext(f.Name())))
 			for _, o := range omit {
+				if o == "" {
+					continue
+				}
 				if strings.HasPrefix(schemaType, strings.ToLower(o)) {
 					skip = true
 				}
@@ -104,7 +108,10 @@ func createCrOutput(inputSchema, group string, omit []string) map[string]string 
 			if skip {
 				continue
 			}
-			schemaName := "{{ .Release.Namespace }}." + n + "." + schemaType
+			if crNamespace == "" {
+				crNamespace = "{{ .Release.Namespace }}"
+			}
+			schemaName := crNamespace + "." + n + "." + schemaType
 			if namespaceOutput != "" {
 				namespaceOutput = namespaceOutput + "---\n"
 			}
