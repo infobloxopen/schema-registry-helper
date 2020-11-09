@@ -15,6 +15,12 @@ Simple library for interacting with the confluent schema registry API. Heavily b
   - This is the path to the directory which will contain the output custom resource files, as well as the custom resource definition file.
 - -group
   - This is the group that is used in the CRD file (example: notifications.infoblox.com)
+- -makecrd
+  - Boolean - use this if you want to generate a new CRD file in your repo. Default is FALSE, as the jsonschema CRD for CUD eventing is declared in the CR controller in the atlas.eventing.cr.controller repo.
+- -omit
+  - Comma-separated list of strings. Any types that start with the given strings will not have CRs created for them. Example: "read,list" will not create any CRs for message types that start with "Read" or "List"
+- -crNamespace
+  - Option to use a different namespace for the CRs, if {{ .Release.Namespace }} is not desired
     
 ## Integrating command line tool into a Makefile
 The command line tool can be integrated into a Makefile by adding lines such as this. This will automatically translate existing protobuf schemas to json and then create custom resource files (and a custom resource definition file) from those json schemas (Make sure that `CR_DIRECTORY` and `SCHEMA_DIRECTORY` are defined somewhere in your Makefile as well)
