@@ -25,13 +25,17 @@ Simple library for interacting with the confluent schema registry API. Heavily b
 ## Integrating command line tool into a Makefile
 The command line tool can be integrated into a Makefile by adding lines such as the last line in the following example. This will automatically translate existing protobuf schemas to json and then create custom resource files from those json schemas. Example variable definitions are below.
 
+NOTE: You will need to use at least `v21.3` of the `infoblox/atlas-gentool` to generage .jsonschema files from your protobuf schema
+```PROTOBUF_ARGS += --jsonschema_out=prefix_schema_files_with_package:$(PROJECT_ROOT)/$(SCHEMA_DIRECTORY)
+```
+
 ```.PHONY protobuf: protobuf-atlas
 protobuf-atlas:
 	@$(GENERATOR) \
 	$(PROTOBUF_ARGS) \
 	$(PROJECT_ROOT)/pkg/pb/service.proto
-	@$(SCHEMA_TO_CR) -inputschema=$(SCHEMA_DIRECTORY) -outputpath=$(CR_DIRECTORY)\
-	-group=$(GROUP) -omit=$(OMIT) -crnamespace=$(CRNAMESPACE)
+	@$(SCHEMA_TO_CR) -inputschema=$(SCHEMA_DIRECTORY) -outputpath=$(CR_DIRECTORY)\ # add these lines
+	-group=$(GROUP) -omit=$(OMIT) -crnamespace=$(CRNAMESPACE)                      # add these lines 
 ```
 
 ```# configuration for schema registry creator
