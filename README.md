@@ -30,7 +30,8 @@ protobuf-atlas:
 	@$(GENERATOR) \
 	$(PROTOBUF_ARGS) \
 	$(PROJECT_ROOT)/pkg/pb/service.proto
-	@$(SCHEMA_TO_CR) -inputschema=$(SCHEMA_DIRECTORY) -outputpath=$(CR_DIRECTORY) -group=$(GROUP) -omit=$(OMIT) -crnamespace=$(CRNAMESPACE)
+	@$(SCHEMA_TO_CR) -inputschema=$(SCHEMA_DIRECTORY) -outputpath=$(CR_DIRECTORY)\
+	-group=$(GROUP) -omit=$(OMIT) -crnamespace=$(CRNAMESPACE)
 ```
 
 ```# configuration for schema registry creator
@@ -39,6 +40,7 @@ SCHEMA_DIRECTORY := charts/tagging-v2/schema
 GROUP            := schemaregistry.infoblox.com
 SCHEMA_TO_CR     := go run vendor/github.com/infobloxopen/schema-registry-helper/schema_to_cr.go
 OMIT             := read,list
-CRNAMESPACE      := atlas.tagging```
+CRNAMESPACE      := atlas.tagging
+```
 
 The end result of this will create custom resource .yaml files in the directory provided. These files will need to be applied as part of the deployment to fully interface with the schema registry toolkit.
