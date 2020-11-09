@@ -27,9 +27,7 @@ The command line tool can be integrated into a Makefile by adding lines such as 
 
 NOTE: You will need to use at least `v21.3` of the `infoblox/atlas-gentool` to generage .jsonschema files from your protobuf schema
 
-```PROTOBUF_ARGS += --jsonschema_out=prefix_schema_files_with_package:$(PROJECT_ROOT)/$(SCHEMA_DIRECTORY)
-
-```
+`PROTOBUF_ARGS += --jsonschema_out=prefix_schema_files_with_package:$(PROJECT_ROOT)/$(SCHEMA_DIRECTORY)`
 
 ```.PHONY protobuf: protobuf-atlas
 protobuf-atlas:
