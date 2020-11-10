@@ -1,7 +1,7 @@
 apiVersion: "schemaregistry.infoblox.com/v1"
 kind: Jsonschema
 metadata:
-  name: {{ .Release.Namespace }}.pb.Event
+  name: {{ .release.namespace }}.pb.event
 spec:
   name: {{ .Release.Namespace }}.pb.Event
   schema: >
@@ -10,7 +10,7 @@ spec:
 apiVersion: "schemaregistry.infoblox.com/v1"
 kind: Jsonschema
 metadata:
-  name: {{ .Release.Namespace }}.pb.EventSubtype
+  name: {{ .release.namespace }}.pb.eventsubtype
 spec:
   name: {{ .Release.Namespace }}.pb.EventSubtype
   schema: >
@@ -19,7 +19,7 @@ spec:
 apiVersion: "schemaregistry.infoblox.com/v1"
 kind: Jsonschema
 metadata:
-  name: {{ .Release.Namespace }}.pb.EventType
+  name: {{ .release.namespace }}.pb.eventtype
 spec:
   name: {{ .Release.Namespace }}.pb.EventType
   schema: >
@@ -28,7 +28,7 @@ spec:
 apiVersion: "schemaregistry.infoblox.com/v1"
 kind: Jsonschema
 metadata:
-  name: {{ .Release.Namespace }}.pb.ProductName
+  name: {{ .release.namespace }}.pb.productname
 spec:
   name: {{ .Release.Namespace }}.pb.ProductName
   schema: >
@@ -37,7 +37,7 @@ spec:
 apiVersion: "schemaregistry.infoblox.com/v1"
 kind: Jsonschema
 metadata:
-  name: {{ .Release.Namespace }}.pb.Summary
+  name: {{ .release.namespace }}.pb.summary
 spec:
   name: {{ .Release.Namespace }}.pb.Summary
   schema: >
