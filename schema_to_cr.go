@@ -96,12 +96,12 @@ func createCrOutput(inputSchema, group, crNamespace string, omit []string) map[s
 		for _, f := range files {
 			skip := false
 			filePath := namespaceDirectory + "/" + f.Name()
-			schemaType := strings.ToLower(strings.TrimSuffix(f.Name(), filepath.Ext(f.Name())))
+			schemaType := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
 			for _, o := range omit {
 				if o == "" {
 					continue
 				}
-				if strings.HasPrefix(schemaType, strings.ToLower(o)) {
+				if strings.HasPrefix(strings.ToLower(schemaType), strings.ToLower(o)) {
 					skip = true
 				}
 			}
