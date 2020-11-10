@@ -13,6 +13,7 @@ import (
 
 type CR struct {
 	Name   string
+	LName  string
 	Schema string
 	Group  string
 }
@@ -21,7 +22,7 @@ type CRD struct {
 	Group string
 }
 
-const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: Jsonschema\nmetadata:\n  name: {{ .Name}}\nspec:\n  name: {{ .Name}}\n  schema: >\n    {{ .Schema}}\n"
+const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: Jsonschema\nmetadata:\n  name: {{ .LName}}\nspec:\n  name: {{ .Name}}\n  schema: >\n    {{ .Schema}}\n"
 const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.{{ .Group}}\nspec:\n  " +
 	"group: {{ .Group}}\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
 	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                " +
@@ -134,6 +135,7 @@ func createCR(inputFilePath, schemaName, group string) string {
 		fmt.Printf("Error processing template for schema %v", schemaName)
 	}
 	var cr CR
+	cr.LName = strings.ToLower(schemaName)
 	cr.Name = schemaName
 	cr.Schema = string(strings.ReplaceAll(string(inputString), "\n", ""))
 	cr.Group = group
