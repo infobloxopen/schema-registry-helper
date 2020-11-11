@@ -27,7 +27,7 @@ The command line tool can be integrated into a Makefile by adding lines such as 
 
 NOTE: You will need to use at least `v21.3` of the `infoblox/atlas-gentool` to generage .jsonschema files from your protobuf schema
 
-`PROTOBUF_ARGS += --jsonschema_out=prefix_schema_files_with_package:$(PROJECT_ROOT)/$(SCHEMA_DIRECTORY)`
+`PROTOBUF_ARGS += --jsonschema_out=$(PROJECT_ROOT)/$(SCHEMA_DIRECTORY)/$(PROTOBUF_GOPACKAGE_NAME)`
 
 ```.PHONY protobuf: protobuf-atlas
 protobuf-atlas:
@@ -39,12 +39,14 @@ protobuf-atlas:
 ```
 
 ```# configuration for schema registry creator
-CR_DIRECTORY     := charts/tagging-v2/templates
-SCHEMA_DIRECTORY := charts/tagging-v2/schema
-GROUP            := schemaregistry.infoblox.com
-SCHEMA_TO_CR     := go run vendor/github.com/infobloxopen/schema-registry-helper/schema_to_cr.go
-OMIT             := read,list
-CRNAMESPACE      := atlas.tagging
+CR_DIRECTORY            := charts/tagging-v2/templates
+SCHEMA_DIRECTORY        := charts/tagging-v2/schema
+GROUP                   := schemaregistry.infoblox.com
+SCHEMA_TO_CR            := go run vendor/github.com/infobloxopen/schema-registry-helper/schema_to_cr.go
+OMIT                    := read,list
+CRNAMESPACE             := atlas.tagging
+PROTOBUF_GOPACKAGE_NAME := pb
+
 ```
 
 To have access to the `schema-registry-helper` package in your Makefile, you'll need to manually import it using a method such as this: https://github.com/Infoblox-CTO/atlas.tagging/blob/master/hack/tools.go
