@@ -45,7 +45,7 @@ GROUP                   := schemaregistry.infoblox.com
 SCHEMA_TO_CR            := go run vendor/github.com/infobloxopen/schema-registry-helper/schema_to_cr.go
 OMIT                    := read,list
 CRNAMESPACE             := atlas.tagging
-PROTOBUF_GOPACKAGE_NAME := pb
+PROTOBUF_GOPACKAGE_NAME := `sh vendor/github.com/infobloxopen/schema-registry-helper/determine_gopackage.sh pkg/pb/service.proto`
 
 ```
 
