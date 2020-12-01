@@ -49,6 +49,14 @@ PROTOBUF_GOPACKAGE_NAME := `sh vendor/github.com/infobloxopen/schema-registry-he
 
 ```
 
-To have access to the `schema-registry-helper` package in your Makefile, you'll need to manually import it using a method such as this: https://github.com/Infoblox-CTO/atlas.tagging/blob/master/hack/tools.go
+To have access to the `schema-registry-helper` package in your Makefile, you'll need to manually import it using a method such as this:
+main.go
+```
+// +build tools
+
+package tools
+
+import _ "github.com/infobloxopen/schema-registry-helper"
+```
 
 The end result of this will create custom resource .yaml files in the directory provided. These files will need to be applied as part of the deployment to fully interface with the schema registry toolkit.
