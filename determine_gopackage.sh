@@ -1,6 +1,6 @@
 #!/bin/bash
 # search an input file for a line containing "option go_package" (or an alternate input argument $2)
-# output the small-form go_package name, i.e. "pb" instead of "github.com/Infoblox-CTO.../pb;pb"
+# output the small-form go_package name, i.e. "pb" instead of "github.com/infobloxopen/.../pb;pb"
 INPUT_FILE=$1
 NAMESPACE_LINE=$2
 if [ -z "$NAMESPACE_LINE"]
