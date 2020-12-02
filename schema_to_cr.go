@@ -22,7 +22,7 @@ type CRD struct {
 	Group string
 }
 
-const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: Jsonschema\nmetadata:\n  name: {{ .LName}}\nspec:\n  name: {{ .Name}}\n  schema: >\n    {{ .Schema}}\n"
+const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: Jsonschema\nmetadata:\n  name: {{ .LName}}\nspec:\n  name: {{ .Name}}\n  schema: |\n    {{ .Schema}}\n"
 const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.{{ .Group}}\nspec:\n  " +
 	"group: {{ .Group}}\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
 	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                " +
@@ -137,7 +137,7 @@ func createCR(inputFilePath, schemaName, group string) string {
 	var cr CR
 	cr.LName = strings.ToLower(schemaName)
 	cr.Name = schemaName
-	cr.Schema = string(strings.ReplaceAll(string(inputString), "\n", ""))
+	cr.Schema = strings.TrimRight(string(strings.ReplaceAll(string(inputString), "\n", "\n    ")), " ")
 	cr.Group = group
 	var tpl bytes.Buffer
 	if err := t.Execute(&tpl, cr); err != nil {
