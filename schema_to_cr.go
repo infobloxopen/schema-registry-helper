@@ -36,6 +36,7 @@ func main() {
 	makeCrdPtr := flag.Bool("makecrd", false, "Boolean option to choose whether to generate a new CRD file (optional; default false)")
 	omitPtr := flag.String("omit", "", "Option to omit creating CR entries for types starting with the given string(s). Multiple strings should be comma-separated - e.g. \"read,list\" (optional).")
 	crNamespacePtr := flag.String("crnamespace", "", "Option to use a different namespace for the CRs if {{ .Release.Namespace }} is not desired")
+	guardPtr := flag.Bool("guard", true, "Boolean option to choose whether to include the guard condition in the CR and CRD files (optional; default true)")
 
 	flag.Parse()
 	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" {
@@ -59,7 +60,7 @@ func main() {
 	}
 
 	crOutput := createCrOutput(inputSchema, group, *crNamespacePtr, omit)
-	writeFiles(crOutput, outputPath, group, *makeCrdPtr)
+	writeFiles(crOutput, outputPath, group, *makeCrdPtr, *guardPtr)
 }
 
 func parseNamespaces(schemaDirectory string) []string {
@@ -112,7 +113,7 @@ func createCrOutput(inputSchema, group, crNamespace string, omit []string) map[s
 			if crNamespace == "" {
 				crNamespace = "{{ .Release.Namespace }}"
 			}
-			schemaName := crNamespace + "." + n + "." + schemaType
+			schemaName := crNamespace + "-" + n + "-" + schemaType
 			if namespaceOutput != "" {
 				namespaceOutput = namespaceOutput + "---\n"
 			}
@@ -147,12 +148,15 @@ func createCR(inputFilePath, schemaName, group string) string {
 	return tpl.String()
 }
 
-func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd bool) {
+func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd, guard bool) {
 	for namespace, output := range crOutput {
 		fo1, err := os.Create(outputPath + "/jsonschema-" + namespace + "-cr.yaml")
 		if err != nil {
 			fmt.Printf("Error creating jsonschema-%v-cr.yaml file\r\n", namespace)
 			os.Exit(1)
+		}
+		if guard {
+			output = "{{- if .Values.schemaregistry.enabled }}\r\n" + output + "{{- end }}\r\n"
 		}
 		_, err = fo1.WriteString(output)
 		if err != nil {
@@ -178,7 +182,11 @@ func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd bo
 		fmt.Printf("Error creating crd \r\n")
 		os.Exit(1)
 	}
-	_, err = fo2.WriteString(tpl.String())
+	crdOutput := tpl.String()
+	if guard {
+		crdOutput = "{{- if .Values.schemaregistry.enabled }}\r\n" + crdOutput + "{{- end }}\r\n"
+	}
+	_, err = fo2.WriteString(crdOutput)
 	if err != nil {
 		fmt.Printf("Error writing to crd.yaml file\r\n")
 	}
