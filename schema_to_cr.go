@@ -24,7 +24,16 @@ type CRD struct {
 	Group string
 }
 
-const cr_skeleton = "apiVersion: {{ .Group }}\nkind: Jsonschema\nmetadata:\n  name: {{ .LName}}\nspec:\n  name: {{ .Name}}\n  schema: |\n  {{- .Schema | nindent 4 }}\n"
+const cr_skeleton = `apiVersion: {{ .Group }}
+kind: Jsonschema
+metadata:
+  name: {{ .LName }}
+spec:
+  name: {{ .Name }}
+  schema: |
+  {{- .Schema | nindent 4 }}
+`
+
 const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.{{ .Group}}\nspec:\n  " +
 	"group: {{ .Group}}\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
 	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                " +
