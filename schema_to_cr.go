@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/Masterminds/sprig"
 )
 
 type CR struct {
@@ -22,7 +24,7 @@ type CRD struct {
 	Group string
 }
 
-const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: Jsonschema\nmetadata:\n  name: {{ .LName}}\nspec:\n  name: {{ .Name}}\n  schema: |\n    {{ .Schema}}\n"
+const cr_skeleton = "apiVersion: {{ .Group }}\nkind: Jsonschema\nmetadata:\n  name: {{ .LName}}\nspec:\n  name: {{ .Name}}\n  schema: |\n  {{- .Schema | nindent 4 }}\n"
 const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.{{ .Group}}\nspec:\n  " +
 	"group: {{ .Group}}\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
 	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                " +
@@ -143,7 +145,7 @@ func strCreateCR(inputFilePath, schemaName, group string) (string, error) {
 }
 
 func createCR(cr CR) (string, error) {
-	t, err := template.New("cr").Parse(cr_skeleton)
+	t, err := template.New("cr").Funcs(sprig.TxtFuncMap()).Parse(cr_skeleton)
 	if err != nil {
 		fmt.Printf("Error processing template for schema %v", cr.Name)
 	}

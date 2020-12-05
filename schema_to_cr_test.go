@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -15,9 +16,27 @@ var testCRs = []struct {
 			Name:   "spec-test",
 			LName:  "metadata-name",
 			Schema: "schema",
-			Group:  "group",
+			Group:  "group/v1",
 		},
 		outputPath: "one.yaml",
+	},
+	{
+		input: CR{
+			Name:  "spec-test-2",
+			LName: "metadata-name-2",
+			Schema: `{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "properties": {
+        "id": {
+            "$ref": "gorm.types.UUIDValue",
+            "additionalProperties": true,
+            "type": "object"
+        }
+    }
+}`,
+			Group: "group/v1",
+		},
+		outputPath: "two.yaml",
 	},
 }
 
@@ -35,7 +54,7 @@ func TestSkeletion(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if e != s {
+		if strings.TrimSpace(e) != strings.TrimSpace(s) {
 			t.Errorf("got:\n%q\nwanted:\n%q", s, e)
 		}
 	}
