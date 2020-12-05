@@ -34,11 +34,35 @@ spec:
   {{- .Schema | nindent 4 }}
 `
 
-const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.{{ .Group}}\nspec:\n  " +
-	"group: {{ .Group}}\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
-	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                " +
-	"schema:\n                  type: string\n                name:\n                  type: string\n  scope: Namespaced\n  names:\n    plural: jsonschemas\n    singular: jsonschema\n    " +
-	"kind: Jsonschema\n    shortNames:\n      - js\n"
+const crd_skeleton = `apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: jsonschemas.{{ .Group}}
+spec:
+  group: {{ .Group}}
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                schema:
+                  type: string
+                name:
+                  type: string
+  scope: Namespaced
+  names:
+    plural: jsonschemas
+    singular: jsonschema
+    kind: Jsonschema
+    shortNames:
+      - js
+`
 
 func main() {
 	inputSchemaPtr := flag.String("inputschema", "", "The directory containing the schema files. tool will automatically import all schema files within subdirectories (required).")
