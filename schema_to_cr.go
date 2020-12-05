@@ -117,34 +117,41 @@ func createCrOutput(inputSchema, group, crNamespace string, omit []string) map[s
 				namespaceOutput = namespaceOutput + "---\n"
 			}
 			fmt.Printf("Creating custom resource for topic %v...\r\n", schemaName)
-			namespaceOutput = namespaceOutput + createCR(filePath, schemaName, group)
+			text, err := strCreateCR(filePath, schemaName, group)
+			if err != nil {
+				panic(err.Error())
+			}
+			namespaceOutput = namespaceOutput + text
 		}
 		crOutput[n] = namespaceOutput
 	}
 	return crOutput
 }
 
-func createCR(inputFilePath, schemaName, group string) string {
+func strCreateCR(inputFilePath, schemaName, group string) (string, error) {
 	inputString, err := ioutil.ReadFile(inputFilePath)
 	if err != nil {
 		fmt.Printf("Error reading input file %v\r\n", inputFilePath)
 		os.Exit(1)
-	}
-	t, err := template.New("cr").Parse(cr_skeleton)
-	if err != nil {
-		fmt.Printf("Error processing template for schema %v", schemaName)
 	}
 	var cr CR
 	cr.LName = strings.ToLower(schemaName)
 	cr.Name = schemaName
 	cr.Schema = strings.TrimRight(string(strings.ReplaceAll(string(inputString), "\n", "\n    ")), " ")
 	cr.Group = group
-	var tpl bytes.Buffer
-	if err := t.Execute(&tpl, cr); err != nil {
-		fmt.Printf("Error creating cr %v\r\n", schemaName)
-		os.Exit(1)
+	return createCR(cr)
+}
+
+func createCR(cr CR) (string, error) {
+	t, err := template.New("cr").Parse(cr_skeleton)
+	if err != nil {
+		fmt.Printf("Error processing template for schema %v", cr.Name)
 	}
-	return tpl.String()
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, cr); err != nil {
+		panic(fmt.Sprintf("Error creating cr %s", cr.Name))
+	}
+	return buf.String(), nil
 }
 
 func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd bool) {
