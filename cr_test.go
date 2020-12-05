@@ -18,9 +18,10 @@ var testCRs = []struct {
 			Schema: "schema",
 			Group:  "group/v1",
 		},
-		outputPath: "one.yaml",
+		outputPath: "cr.one.yaml",
 	},
 	{
+		outputPath: "cr.two.yaml",
 		input: CR{
 			Name:  "spec-test-2",
 			LName: "metadata-name-2",
@@ -36,11 +37,10 @@ var testCRs = []struct {
 }`,
 			Group: "group/v1",
 		},
-		outputPath: "two.yaml",
 	},
 }
 
-func TestSkeletion(t *testing.T) {
+func TestCustomRes(t *testing.T) {
 	for _, tc := range testCRs {
 		path := filepath.Join("testdata", tc.outputPath)
 		bs, err := ioutil.ReadFile(path)

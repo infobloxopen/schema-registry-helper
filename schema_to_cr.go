@@ -185,19 +185,29 @@ func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd bo
 		fmt.Printf("Error creating crd.yaml file\r\n")
 		os.Exit(1)
 	}
-	t, err := template.New("crd").Parse(crd_skeleton)
-	if err != nil {
-		fmt.Printf("Error processing template for crd\r\n")
-	}
+
 	var crd CRD
 	crd.Group = group
-	var tpl bytes.Buffer
-	if err := t.Execute(&tpl, crd); err != nil {
-		fmt.Printf("Error creating crd \r\n")
-		os.Exit(1)
+
+	s, err := createCRD(crd)
+	if err != nil {
+		panic(err.Error())
 	}
-	_, err = fo2.WriteString(tpl.String())
+
+	_, err = fo2.WriteString(s)
 	if err != nil {
 		fmt.Printf("Error writing to crd.yaml file\r\n")
 	}
+}
+
+func createCRD(input CRD) (string, error) {
+	t, err := template.New("crd").Parse(crd_skeleton)
+	if err != nil {
+		return "", err
+	}
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, input); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
