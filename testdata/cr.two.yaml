@@ -1,4 +1,4 @@
-apiVersion: "group/v1"
+apiVersion: group/v1
 kind: Jsonschema
 metadata:
   name: metadata-name-2

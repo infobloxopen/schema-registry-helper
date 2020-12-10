@@ -24,14 +24,14 @@ type CRD struct {
 	Group string
 }
 
-const cr_skeleton = `apiVersion: "{{ .Group }}/v1"
+const cr_skeleton = `apiVersion: {{ .Group }}
 kind: Jsonschema
 metadata:
   name: {{ .LName }}
 spec:
   name: {{ .Name }}
   schema: |
-{{- .Schema | nindent 4 }}
+  {{- .Schema | nindent 4 }}
 `
 
 const crd_skeleton = `apiVersion: apiextensions.k8s.io/v1
@@ -71,7 +71,6 @@ func main() {
 	makeCrdPtr := flag.Bool("makecrd", false, "Boolean option to choose whether to generate a new CRD file (optional; default false)")
 	omitPtr := flag.String("omit", "", "Option to omit creating CR entries for types starting with the given string(s). Multiple strings should be comma-separated - e.g. \"read,list\" (optional).")
 	crNamespacePtr := flag.String("crnamespace", "", "Option to use a different namespace for the CRs if {{ .Release.Namespace }} is not desired")
-	skipGuardPtr := flag.Bool("skipguard", false, "Boolean option to choose whether to skip the guard condition in the CR and CRD files (optional; default false)")
 
 	flag.Parse()
 	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" {
@@ -95,7 +94,7 @@ func main() {
 	}
 
 	crOutput := createCrOutput(inputSchema, group, *crNamespacePtr, omit)
-	writeFiles(crOutput, outputPath, group, *makeCrdPtr, *skipGuardPtr)
+	writeFiles(crOutput, outputPath, group, *makeCrdPtr)
 }
 
 func parseNamespaces(schemaDirectory string) []string {
@@ -148,7 +147,7 @@ func createCrOutput(inputSchema, group, crNamespace string, omit []string) map[s
 			if crNamespace == "" {
 				crNamespace = "{{ .Release.Namespace }}"
 			}
-			schemaName := crNamespace + "-" + n + "-" + schemaType
+			schemaName := crNamespace + "." + n + "." + schemaType
 			if namespaceOutput != "" {
 				namespaceOutput = namespaceOutput + "---\n"
 			}
@@ -190,15 +189,12 @@ func createCR(cr CR) (string, error) {
 	return buf.String(), nil
 }
 
-func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd, skipGuard bool) {
+func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd bool) {
 	for namespace, output := range crOutput {
 		fo1, err := os.Create(outputPath + "/jsonschema-" + namespace + "-cr.yaml")
 		if err != nil {
 			fmt.Printf("Error creating jsonschema-%v-cr.yaml file\r\n", namespace)
 			os.Exit(1)
-		}
-		if !skipGuard {
-			output = "{{- if .Values.schemaregistry.enabled }}\r\n" + output + "{{- end }}\r\n"
 		}
 		_, err = fo1.WriteString(output)
 		if err != nil {
@@ -221,9 +217,7 @@ func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd, s
 	if err != nil {
 		panic(err.Error())
 	}
-	if !skipGuard {
-		s = "{{- if .Values.schemaregistry.enabled }}\r\n" + s + "{{- end }}\r\n"
-	}
+
 	_, err = fo2.WriteString(s)
 	if err != nil {
 		fmt.Printf("Error writing to crd.yaml file\r\n")
