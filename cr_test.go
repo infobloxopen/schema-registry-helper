@@ -16,7 +16,7 @@ var testCRs = []struct {
 			Name:   "spec-test",
 			LName:  "metadata-name",
 			Schema: "schema",
-			Group:  "group/v1",
+			Group:  "group",
 		},
 		outputPath: "cr.one.yaml",
 	},
@@ -35,7 +35,7 @@ var testCRs = []struct {
         }
     }
 }`,
-			Group: "group/v1",
+			Group: "group",
 		},
 	},
 }
