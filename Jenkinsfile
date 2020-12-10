@@ -14,10 +14,6 @@ pipeline {
     stage('Test') {
       steps {
         sh 'cd $PROJECT && make test'
-      }
-    }
-    stage('Build image') {
-      steps {
         sh 'cd $PROJECT && make examples'
         sh 'cd $PROJECT && git diff --exit-code'
       }
