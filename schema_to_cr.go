@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/Masterminds/sprig"
 )
 
 type CR struct {
@@ -22,12 +24,45 @@ type CRD struct {
 	Group string
 }
 
-const cr_skeleton = "apiVersion: \"{{ .Group}}/v1\"\nkind: Jsonschema\nmetadata:\n  name: {{ .LName}}\nspec:\n  name: {{ .Name}}\n  schema: |\n    {{ .Schema}}\n"
-const crd_skeleton = "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nmetadata:\n  name: jsonschemas.{{ .Group}}\nspec:\n  " +
-	"group: {{ .Group}}\n  versions:\n    - name: v1\n      served: true\n      storage: true\n      schema:\n        openAPIV3Schema:\n          " +
-	"type: object\n          properties:\n            spec:\n              type: object\n              properties:\n                " +
-	"schema:\n                  type: string\n                name:\n                  type: string\n  scope: Namespaced\n  names:\n    plural: jsonschemas\n    singular: jsonschema\n    " +
-	"kind: Jsonschema\n    shortNames:\n      - js\n"
+const cr_skeleton = `apiVersion: {{ .Group }}
+kind: Jsonschema
+metadata:
+  name: {{ .LName }}
+spec:
+  name: {{ .Name }}
+  schema: |
+  {{- .Schema | nindent 4 }}
+`
+
+const crd_skeleton = `apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: jsonschemas.{{ .Group}}
+spec:
+  group: {{ .Group}}
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                schema:
+                  type: string
+                name:
+                  type: string
+  scope: Namespaced
+  names:
+    plural: jsonschemas
+    singular: jsonschema
+    kind: Jsonschema
+    shortNames:
+      - js
+`
 
 func main() {
 	inputSchemaPtr := flag.String("inputschema", "", "The directory containing the schema files. tool will automatically import all schema files within subdirectories (required).")
@@ -118,34 +153,41 @@ func createCrOutput(inputSchema, group, crNamespace string, omit []string) map[s
 				namespaceOutput = namespaceOutput + "---\n"
 			}
 			fmt.Printf("Creating custom resource for topic %v...\r\n", schemaName)
-			namespaceOutput = namespaceOutput + createCR(filePath, schemaName, group)
+			text, err := strCreateCR(filePath, schemaName, group)
+			if err != nil {
+				panic(err.Error())
+			}
+			namespaceOutput = namespaceOutput + text
 		}
 		crOutput[n] = namespaceOutput
 	}
 	return crOutput
 }
 
-func createCR(inputFilePath, schemaName, group string) string {
+func strCreateCR(inputFilePath, schemaName, group string) (string, error) {
 	inputString, err := ioutil.ReadFile(inputFilePath)
 	if err != nil {
 		fmt.Printf("Error reading input file %v\r\n", inputFilePath)
 		os.Exit(1)
-	}
-	t, err := template.New("cr").Parse(cr_skeleton)
-	if err != nil {
-		fmt.Printf("Error processing template for schema %v", schemaName)
 	}
 	var cr CR
 	cr.LName = strings.ToLower(schemaName)
 	cr.Name = schemaName
 	cr.Schema = strings.TrimRight(string(strings.ReplaceAll(string(inputString), "\n", "\n    ")), " ")
 	cr.Group = group
-	var tpl bytes.Buffer
-	if err := t.Execute(&tpl, cr); err != nil {
-		fmt.Printf("Error creating cr %v\r\n", schemaName)
-		os.Exit(1)
+	return createCR(cr)
+}
+
+func createCR(cr CR) (string, error) {
+	t, err := template.New("cr").Funcs(sprig.TxtFuncMap()).Parse(cr_skeleton)
+	if err != nil {
+		fmt.Printf("Error processing template for schema %v", cr.Name)
 	}
-	return tpl.String()
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, cr); err != nil {
+		panic(fmt.Sprintf("Error creating cr %s", cr.Name))
+	}
+	return buf.String(), nil
 }
 
 func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd, skipGuard bool) {
@@ -171,23 +213,32 @@ func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd, s
 		fmt.Printf("Error creating crd.yaml file\r\n")
 		os.Exit(1)
 	}
-	t, err := template.New("crd").Parse(crd_skeleton)
-	if err != nil {
-		fmt.Printf("Error processing template for crd\r\n")
-	}
+
 	var crd CRD
 	crd.Group = group
-	var tpl bytes.Buffer
-	if err := t.Execute(&tpl, crd); err != nil {
-		fmt.Printf("Error creating crd \r\n")
-		os.Exit(1)
+
+	s, err := createCRD(crd)
+	if err != nil {
+		panic(err.Error())
 	}
 	crdOutput := tpl.String()
 	if !skipGuard {
 		crdOutput = "{{- if .Values.schemaregistry.enabled }}\r\n" + crdOutput + "{{- end }}\r\n"
 	}
-	_, err = fo2.WriteString(crdOutput)
+	_, err = fo2.WriteString(s)
 	if err != nil {
 		fmt.Printf("Error writing to crd.yaml file\r\n")
 	}
+}
+
+func createCRD(input CRD) (string, error) {
+	t, err := template.New("crd").Parse(crd_skeleton)
+	if err != nil {
+		return "", err
+	}
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, input); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
