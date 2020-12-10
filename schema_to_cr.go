@@ -24,14 +24,14 @@ type CRD struct {
 	Group string
 }
 
-const cr_skeleton = `apiVersion: {{ .Group }}
+const cr_skeleton = `apiVersion: "{{ .Group }}/v1"
 kind: Jsonschema
 metadata:
   name: {{ .LName }}
 spec:
   name: {{ .Name }}
   schema: |
-  {{- .Schema | nindent 4 }}
+{{- .Schema | nindent 4 }}
 `
 
 const crd_skeleton = `apiVersion: apiextensions.k8s.io/v1
