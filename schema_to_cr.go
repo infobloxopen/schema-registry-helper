@@ -221,9 +221,8 @@ func writeFiles(crOutput map[string]string, outputPath, group string, makeCrd, s
 	if err != nil {
 		panic(err.Error())
 	}
-	crdOutput := tpl.String()
 	if !skipGuard {
-		crdOutput = "{{- if .Values.schemaregistry.enabled }}\r\n" + crdOutput + "{{- end }}\r\n"
+		s = "{{- if .Values.schemaregistry.enabled }}\r\n" + s + "{{- end }}\r\n"
 	}
 	_, err = fo2.WriteString(s)
 	if err != nil {
