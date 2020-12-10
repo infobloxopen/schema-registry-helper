@@ -1,0 +1,17 @@
+apiVersion: group/v1
+kind: Jsonschema
+metadata:
+  name: metadata-name-2
+spec:
+  name: spec-test-2
+  schema: |
+    {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "properties": {
+            "id": {
+                "$ref": "gorm.types.UUIDValue",
+                "additionalProperties": true,
+                "type": "object"
+            }
+        }
+    }
