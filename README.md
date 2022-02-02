@@ -21,6 +21,8 @@ Simple library for interacting with the confluent schema registry API. Heavily b
   - Comma-separated list of strings. Any types that start with the given strings will not have CRs created for them. Example: "read,list" will not create any CRs for message types that start with "Read" or "List"
 - -crnamespace
   - Option to use a different namespace for the CRs, if {{ .Release.Namespace }} is not desired
+- -commonname, -fullname
+  - Options to add new parameters `x-csv-common-name` and `x-csv-full-name` to the result CR with the specified values. 
     
 ## Integrating command line tool into a Makefile
 The command line tool can be integrated into a Makefile by adding lines such as the last line in the following example. This will automatically translate existing protobuf schemas to json and then create custom resource files from those json schemas. Example variable definitions are below.
