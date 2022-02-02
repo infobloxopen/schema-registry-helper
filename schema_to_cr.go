@@ -72,6 +72,8 @@ func main() {
 	omitPtr := flag.String("omit", "", "Option to omit creating CR entries for types starting with the given string(s). Multiple strings should be comma-separated - e.g. \"read,list\" (optional).")
 	crNamespacePtr := flag.String("crnamespace", "", "Option to use a different namespace for the CRs if {{ .Release.Namespace }} is not desired")
 	skipGuardPtr := flag.Bool("skipguard", false, "Boolean option to choose whether to skip the guard condition in the CR and CRD files (optional; default false)")
+	commonNamePtr := flag.String("commonname", "", "Option to add parameter `x-csv-common-name` with the given value. Used for CSV Serializer.")
+	fullNamePtr := flag.String("fullname", "", "Option to add parameter `x-csv-full-name` with the given value. Used for CSV Serializer.")
 
 	flag.Parse()
 	if *inputSchemaPtr == "" || *outputPathPtr == "" || *groupPtr == "" {
@@ -94,7 +96,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	crOutput := createCrOutput(inputSchema, group, *crNamespacePtr, omit)
+	crOutput := createCrOutput(inputSchema, group, *crNamespacePtr, omit, *commonNamePtr, *fullNamePtr)
 	writeFiles(crOutput, outputPath, group, *makeCrdPtr, *skipGuardPtr)
 }
 
@@ -118,7 +120,7 @@ func parseNamespaces(schemaDirectory string) []string {
 	return namespaces
 }
 
-func createCrOutput(inputSchema, group, crNamespace string, omit []string) map[string]string {
+func createCrOutput(inputSchema, group, crNamespace string, omit []string, commonName, fullName string) map[string]string {
 	crOutput := make(map[string]string)
 	namespaces := parseNamespaces(inputSchema)
 	for _, n := range namespaces {
@@ -153,7 +155,7 @@ func createCrOutput(inputSchema, group, crNamespace string, omit []string) map[s
 				namespaceOutput = namespaceOutput + "---\n"
 			}
 			fmt.Printf("Creating custom resource for topic %v...\r\n", schemaName)
-			text, err := strCreateCR(filePath, schemaName, group)
+			text, err := strCreateCR(filePath, schemaName, group, commonName, fullName)
 			if err != nil {
 				panic(err.Error())
 			}
@@ -164,7 +166,7 @@ func createCrOutput(inputSchema, group, crNamespace string, omit []string) map[s
 	return crOutput
 }
 
-func strCreateCR(inputFilePath, schemaName, group string) (string, error) {
+func strCreateCR(inputFilePath, schemaName, group, commonName, fullName string) (string, error) {
 	inputString, err := ioutil.ReadFile(inputFilePath)
 	if err != nil {
 		fmt.Printf("Error reading input file %v\r\n", inputFilePath)
@@ -175,6 +177,14 @@ func strCreateCR(inputFilePath, schemaName, group string) (string, error) {
 	cr.Name = schemaName
 	cr.Schema = strings.TrimRight(string(strings.ReplaceAll(string(inputString), "\n", "\n    ")), " ")
 	cr.Group = group
+	if fullName != "" {
+		fullName := "\"x-csv-full-name\": \"" + fullName + "\","
+		cr.Schema = strings.Replace(cr.Schema, ",", ",\n        "+fullName, 1)
+	}
+	if commonName != "" {
+		commonName := "\"x-csv-common-name\": \"" + commonName + "\","
+		cr.Schema = strings.Replace(cr.Schema, ",", ",\n        "+commonName, 1)
+	}
 	return createCR(cr)
 }
 

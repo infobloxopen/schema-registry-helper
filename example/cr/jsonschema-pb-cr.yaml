@@ -2,187 +2,206 @@
 apiVersion: "schemaregistry.infoblox.com/v1"
 kind: Jsonschema
 metadata:
-  name: {{ .release.namespace }}-pb-event
+  name: atlas.tagging-pb-namespace
 spec:
-  name: {{ .Release.Namespace }}-pb-Event
+  name: atlas.tagging-pb-Namespace
   schema: |
     {
             "$schema": "http://json-schema.org/draft-04/schema#",
+            "x-csv-common-name": "TestCommon",
+            "x-csv-full-name": "test.full.name",
             "properties": {
-                "type": {
-                    "enum": [
-                        "ACCOUNT",
-                        0,
-                        "SYSTEM",
-                        1,
-                        "PRODUCT",
-                        2,
-                        "USER",
-                        3
-                    ],
-                    "oneOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "integer"
-                        }
-                    ]
-                },
-                "subtype": {
-                    "type": "string"
-                },
-                "account_id": {
-                    "type": "string"
-                },
-                "application_id": {
-                    "type": "string"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "TTL": {
+                "id": {
                     "properties": {
-                        "seconds": {
-                            "oneOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "string"
-                                }
-                            ],
-                            "description": "Signed seconds of the span of time. Must be from -315,576,000,000\n to +315,576,000,000 inclusive. Note: these bounds are computed from:\n 60 sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years"
+                        "application_name": {
+                            "type": "string",
+                            "description": "An application identifier that will be used among\n other infrastructure services to identify the application"
                         },
-                        "nanos": {
-                            "type": "integer",
-                            "description": "Signed fractions of a second at nanosecond resolution of the span\n of time. Durations less than one second are represented with a 0\n `seconds` field and a positive or negative `nanos` field. For durations\n of one second or more, a non-zero value for the `nanos` field must be\n of the same sign as the `seconds` field. Must be from -999,999,999\n to +999,999,999 inclusive."
+                        "resource_type": {
+                            "type": "string",
+                            "description": "An application specific type name of a resource"
+                        },
+                        "resource_id": {
+                            "type": "string",
+                            "description": "An application specific resource identity of a resource"
                         }
                     },
                     "additionalProperties": true,
                     "type": "object"
                 },
-                "metadata": {
-                    "additionalProperties": {
-                        "type": "string"
-                    },
+                "name": {
+                    "type": "string",
+                    "description": "Human-readable name for namespace."
+                },
+                "created_at": {
+                    "type": "string",
+                    "description": "Read-only. Timestamp created_at, equals to time when particular object was created.",
+                    "format": "date-time"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "description": "Read-only. Timestamp updated_at, equals to time when particular object was updated, by default equals to created_at.",
+                    "format": "date-time"
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "description": "Read-only. Timestamp deleted_at, equals to time when particular object was deleted, by default equals to null.",
+                    "format": "date-time"
+                },
+                "type": {
+                    "type": "string",
+                    "description": "The namespace type. It is one of [\"freeform\",  \"locked\", \"system\"]. By default equals to \"freeform\"."
+                }
+            },
+            "additionalProperties": true,
+            "type": "object"
+        }
+---
+apiVersion: "schemaregistry.infoblox.com/v1"
+kind: Jsonschema
+metadata:
+  name: atlas.tagging-pb-tag
+spec:
+  name: atlas.tagging-pb-Tag
+  schema: |
+    {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "x-csv-common-name": "TestCommon",
+            "x-csv-full-name": "test.full.name",
+            "properties": {
+                "id": {
+                    "$ref": "atlas.rpc.Identifier",
+                    "additionalProperties": true,
                     "type": "object"
                 },
-                "occurredTime": {
+                "key": {
                     "type": "string",
+                    "description": "The tag key."
+                },
+                "type": {
+                    "type": "string",
+                    "description": "The tag type. It is one of [\"freeform\",  \"restricted\"]. By default equals to \"freeform\"."
+                },
+                "regexp": {
+                    "type": "string",
+                    "description": "The tag regexp. POSIX regexp string, used for values validation. By default equals to \"*\"(allow all)."
+                },
+                "values": {
+                    "items": {
+                        "$schema": "http://json-schema.org/draft-04/schema#",
+                        "properties": {
+                            "id": {
+                                "$ref": "atlas.rpc.Identifier",
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            "value": {
+                                "type": "string",
+                                "description": "The value."
+                            },
+                            "created_at": {
+                                "type": "string",
+                                "description": "Read-only. Timestamp created_at, equals to time when particular object was created.",
+                                "format": "date-time"
+                            },
+                            "deleted_at": {
+                                "type": "string",
+                                "description": "Read-only. Timestamp deleted_at, equals to time when particular object was deleted, by default equals to null.",
+                                "format": "date-time"
+                            }
+                        },
+                        "additionalProperties": true,
+                        "type": "object"
+                    },
+                    "type": "array",
+                    "description": "The values is a repeated value objects which belongs to particular tag."
+                },
+                "created_at": {
+                    "type": "string",
+                    "description": "Read-only. Timestamp created_at, equals to time when particular object was created.",
                     "format": "date-time"
                 },
-                "generatedTime": {
+                "updated_at": {
                     "type": "string",
+                    "description": "Read-only. Timestamp updated_at, equals to time when particular object was updated, by default equals to created_at.",
                     "format": "date-time"
                 },
-                "id": {
-                    "type": "string"
+                "deleted_at": {
+                    "type": "string",
+                    "description": "Read-only. Timestamp deleted_at, equals to time when particular object was deleted, by default equals to null.",
+                    "format": "date-time"
+                },
+                "regexp_description": {
+                    "type": "string",
+                    "description": "The regexp_description, optional description for regexp field."
                 },
                 "status": {
-                    "enum": [
-                        "RAISED",
-                        0,
-                        "CLEARED",
-                        1,
-                        "REMINDER",
-                        2
-                    ],
-                    "oneOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "integer"
-                        }
-                    ]
+                    "type": "string",
+                    "description": "The tag status. It is one of [\"active\",  \"revoked\"]. By default equals to \"active\"."
                 },
-                "product_name": {
-                    "type": "string"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object"
-        }
----
-apiVersion: "schemaregistry.infoblox.com/v1"
-kind: Jsonschema
-metadata:
-  name: {{ .release.namespace }}-pb-eventsubtype
-spec:
-  name: {{ .Release.Namespace }}-pb-EventSubtype
-  schema: |
-    {
-            "$schema": "http://json-schema.org/draft-04/schema#",
-            "properties": {
-                "id": {
-                    "$ref": "gorm.types.UUIDValue",
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "product_name": {
+                "namespace": {
                     "properties": {
                         "id": {
-                            "$ref": "gorm.types.UUIDValue",
+                            "$ref": "atlas.rpc.Identifier",
                             "additionalProperties": true,
                             "type": "object"
                         },
                         "name": {
-                            "type": "string"
+                            "type": "string",
+                            "description": "Human-readable name for namespace."
                         },
-                        "description": {
-                            "type": "string"
+                        "created_at": {
+                            "type": "string",
+                            "description": "Read-only. Timestamp created_at, equals to time when particular object was created.",
+                            "format": "date-time"
                         },
-                        "allowed": {
-                            "type": "boolean"
+                        "updated_at": {
+                            "type": "string",
+                            "description": "Read-only. Timestamp updated_at, equals to time when particular object was updated, by default equals to created_at.",
+                            "format": "date-time"
+                        },
+                        "deleted_at": {
+                            "type": "string",
+                            "description": "Read-only. Timestamp deleted_at, equals to time when particular object was deleted, by default equals to null.",
+                            "format": "date-time"
+                        },
+                        "type": {
+                            "type": "string",
+                            "description": "The namespace type. It is one of [\"freeform\",  \"locked\", \"system\"]. By default equals to \"freeform\"."
                         }
                     },
                     "additionalProperties": true,
-                    "type": "object"
+                    "type": "object",
+                    "description": "The namespace is a reference of an namespace object to which tag belongs."
                 },
-                "event_type": {
-                    "properties": {
-                        "id": {
-                            "$ref": "gorm.types.UUIDValue",
-                            "additionalProperties": true,
-                            "type": "object"
-                        },
-                        "name": {
-                            "type": "string"
-                        },
-                        "description": {
-                            "type": "string"
-                        }
-                    },
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "allowed": {
-                    "type": "boolean"
-                },
-                "description": {
-                    "type": "string"
+                "version": {
+                    "type": "integer",
+                    "description": "The version is used to prevent multiple users from updating the same tag simultaneously"
                 }
             },
             "additionalProperties": true,
             "type": "object",
             "definitions": {
-                "gorm.types.UUIDValue": {
+                "atlas.rpc.Identifier": {
                     "$schema": "http://json-schema.org/draft-04/schema#",
                     "properties": {
-                        "value": {
-                            "type": "string"
+                        "application_name": {
+                            "type": "string",
+                            "description": "An application identifier that will be used among\n other infrastructure services to identify the application"
+                        },
+                        "resource_type": {
+                            "type": "string",
+                            "description": "An application specific type name of a resource"
+                        },
+                        "resource_id": {
+                            "type": "string",
+                            "description": "An application specific resource identity of a resource"
                         }
                     },
                     "additionalProperties": true,
                     "type": "object",
-                    "id": "gorm.types.UUIDValue"
+                    "description": "A number of application services require a mechanism to\n encode the identity of a particular resource across applications.\n The resource identifiers consist of the application ID,\n an application-defined resource type,\n and an application-defined ID for that resource",
+                    "id": "atlas.rpc.Identifier"
                 }
             }
         }
@@ -190,211 +209,49 @@ spec:
 apiVersion: "schemaregistry.infoblox.com/v1"
 kind: Jsonschema
 metadata:
-  name: {{ .release.namespace }}-pb-eventtype
+  name: atlas.tagging-pb-value
 spec:
-  name: {{ .Release.Namespace }}-pb-EventType
+  name: atlas.tagging-pb-Value
   schema: |
     {
             "$schema": "http://json-schema.org/draft-04/schema#",
+            "x-csv-common-name": "TestCommon",
+            "x-csv-full-name": "test.full.name",
             "properties": {
                 "id": {
                     "properties": {
-                        "value": {
-                            "type": "string"
+                        "application_name": {
+                            "type": "string",
+                            "description": "An application identifier that will be used among\n other infrastructure services to identify the application"
+                        },
+                        "resource_type": {
+                            "type": "string",
+                            "description": "An application specific type name of a resource"
+                        },
+                        "resource_id": {
+                            "type": "string",
+                            "description": "An application specific resource identity of a resource"
                         }
                     },
                     "additionalProperties": true,
                     "type": "object"
                 },
-                "name": {
-                    "type": "string"
+                "value": {
+                    "type": "string",
+                    "description": "The value."
                 },
-                "description": {
-                    "type": "string"
+                "created_at": {
+                    "type": "string",
+                    "description": "Read-only. Timestamp created_at, equals to time when particular object was created.",
+                    "format": "date-time"
+                },
+                "deleted_at": {
+                    "type": "string",
+                    "description": "Read-only. Timestamp deleted_at, equals to time when particular object was deleted, by default equals to null.",
+                    "format": "date-time"
                 }
             },
             "additionalProperties": true,
             "type": "object"
-        }
----
-apiVersion: "schemaregistry.infoblox.com/v1"
-kind: Jsonschema
-metadata:
-  name: {{ .release.namespace }}-pb-productname
-spec:
-  name: {{ .Release.Namespace }}-pb-ProductName
-  schema: |
-    {
-            "$schema": "http://json-schema.org/draft-04/schema#",
-            "properties": {
-                "id": {
-                    "properties": {
-                        "value": {
-                            "type": "string"
-                        }
-                    },
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "allowed": {
-                    "type": "boolean"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object"
-        }
----
-apiVersion: "schemaregistry.infoblox.com/v1"
-kind: Jsonschema
-metadata:
-  name: {{ .release.namespace }}-pb-summary
-spec:
-  name: {{ .Release.Namespace }}-pb-Summary
-  schema: |
-    {
-            "$schema": "http://json-schema.org/draft-04/schema#",
-            "properties": {
-                "id": {
-                    "$ref": "gorm.types.UUIDValue",
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "account_id": {
-                    "type": "string"
-                },
-                "summarization_rule_id": {
-                    "$ref": "gorm.types.UUIDValue",
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "fingerprint": {
-                    "type": "string"
-                },
-                "event_id": {
-                    "type": "string"
-                },
-                "event_type": {
-                    "enum": [
-                        "ACCOUNT",
-                        0,
-                        "SYSTEM",
-                        1,
-                        "PRODUCT",
-                        2,
-                        "USER",
-                        3
-                    ],
-                    "oneOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "integer"
-                        }
-                    ]
-                },
-                "event_subtype": {
-                    "type": "string"
-                },
-                "event_application_id": {
-                    "type": "string"
-                },
-                "event_location": {
-                    "type": "string"
-                },
-                "event_severity": {
-                    "enum": [
-                        "low",
-                        0,
-                        "medium",
-                        1,
-                        "high",
-                        2
-                    ],
-                    "oneOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "integer"
-                        }
-                    ]
-                },
-                "event_TTL": {
-                    "properties": {
-                        "seconds": {
-                            "oneOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "string"
-                                }
-                            ],
-                            "description": "Signed seconds of the span of time. Must be from -315,576,000,000\n to +315,576,000,000 inclusive. Note: these bounds are computed from:\n 60 sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years"
-                        },
-                        "nanos": {
-                            "type": "integer",
-                            "description": "Signed fractions of a second at nanosecond resolution of the span\n of time. Durations less than one second are represented with a 0\n `seconds` field and a positive or negative `nanos` field. For durations\n of one second or more, a non-zero value for the `nanos` field must be\n of the same sign as the `seconds` field. Must be from -999,999,999\n to +999,999,999 inclusive."
-                        }
-                    },
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "event_metadata": {
-                    "additionalProperties": {
-                        "type": "string"
-                    },
-                    "type": "object"
-                },
-                "event_occurredTime": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "event_generatedTime": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "event_status": {
-                    "enum": [
-                        "RAISED",
-                        0,
-                        "CLEARED",
-                        1
-                    ],
-                    "oneOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "integer"
-                        }
-                    ]
-                },
-                "product_name": {
-                    "type": "string"
-                }
-            },
-            "additionalProperties": true,
-            "type": "object",
-            "definitions": {
-                "gorm.types.UUIDValue": {
-                    "$schema": "http://json-schema.org/draft-04/schema#",
-                    "properties": {
-                        "value": {
-                            "type": "string"
-                        }
-                    },
-                    "additionalProperties": true,
-                    "type": "object",
-                    "id": "gorm.types.UUIDValue"
-                }
-            }
         }
 {{- end }}
